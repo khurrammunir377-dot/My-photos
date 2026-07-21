@@ -50,9 +50,9 @@ android {
             // TODO: replace with your own release signing config before publishing
             signingConfig = signingConfigs.debug
             minifyEnabled false
+            shrinkResources false
         }
     }
-}
 
 flutter {
     source = "../.."
