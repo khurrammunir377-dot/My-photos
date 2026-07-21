@@ -36,8 +36,6 @@ android {
 
     defaultConfig {
         applicationId "com.uudsaero.myphotoorganizer"
-        // Google Play requires targetSdk to track recent Android versions;
-        // minSdk 23 covers camera/gal/photo_manager reliably.
         minSdk = 23
         targetSdk = 34
         versionCode = flutterVersionCode.toInteger()
@@ -47,12 +45,12 @@ android {
 
     buildTypes {
         release {
-            // TODO: replace with your own release signing config before publishing
             signingConfig = signingConfigs.debug
             minifyEnabled false
             shrinkResources false
         }
     }
+}
 
 flutter {
     source = "../.."
