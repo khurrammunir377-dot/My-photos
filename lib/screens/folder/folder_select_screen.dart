@@ -1,11 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../models/folder_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/folder_service.dart';
 import '../../utils/constants.dart';
+import '../admin/admin_dashboard_screen.dart';
 import '../camera/camera_screen.dart';
 import '../gallery/gallery_screen.dart';
 import '../organize/auto_organize_screen.dart';
+import '../subscription/subscription_screen.dart';
 import 'create_folder_screen.dart';
 
 class FolderSelectScreen extends StatefulWidget {
@@ -62,12 +65,21 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Not now')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.proGold),
-            onPressed: () => Navigator.pop(context), // TODO: wire to in_app_purchase flow
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()))
+                  .then((_) => _load());
+            },
             child: const Text('Upgrade'),
           ),
         ],
       ),
     );
+  }
+
+  bool get _isAdmin {
+    final email = FirebaseAuth.instance.currentUser?.email;
+    return email != null && AppConstants.adminEmails.contains(email);
   }
 
   void _openFolder(FolderModel folder) {
@@ -93,6 +105,23 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
         elevation: 0,
         title: const Text(AppConstants.appName, style: TextStyle(color: AppColors.textDark)),
         actions: [
+          if (_isAdmin)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.textMuted),
+              tooltip: 'Admin Dashboard',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+              ),
+            ),
+          IconButton(
+            icon: const Icon(Icons.workspace_premium_outlined, color: AppColors.proGold),
+            tooltip: 'Go Pro',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+            ).then((_) => _load()),
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.textMuted),
             onPressed: () async {

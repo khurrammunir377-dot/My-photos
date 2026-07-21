@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
 import '../folder/folder_select_screen.dart';
 import 'signup_screen.dart';
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
+  final _userDirectory = UserDirectoryService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
@@ -28,6 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+      final user = _authService.currentUser;
+      if (user != null) await _userDirectory.recordLogin(user);
       _goToApp();
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
@@ -43,7 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       final result = await _authService.signInWithGoogle();
-      if (result != null) _goToApp();
+      if (result != null) {
+        final user = _authService.currentUser;
+        if (user != null) await _userDirectory.recordLogin(user);
+        _goToApp();
+      }
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
     } finally {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/referral_service.dart';
+import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
 import '../folder/folder_select_screen.dart';
 import 'login_screen.dart';
@@ -13,8 +15,11 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _authService = AuthService();
+  final _userDirectory = UserDirectoryService();
+  final _referralService = ReferralService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _referralController = TextEditingController();
   bool _loading = false;
   String? _error;
 
@@ -24,10 +29,11 @@ class _SignupScreenState extends State<SignupScreen> {
       _error = null;
     });
     try {
-      await _authService.signUpWithEmail(
+      final credential = await _authService.signUpWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+      await _completeSignupBookkeeping(credential.user?.uid);
       _goToApp();
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
@@ -43,11 +49,30 @@ class _SignupScreenState extends State<SignupScreen> {
     });
     try {
       final result = await _authService.signInWithGoogle();
-      if (result != null) _goToApp();
+      if (result != null) {
+        await _completeSignupBookkeeping(result.user?.uid);
+        _goToApp();
+      }
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Creates the Firestore user profile and applies a referral code if one was entered.
+  Future<void> _completeSignupBookkeeping(String? uid) async {
+    if (uid == null) return;
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    final referralCode = _referralController.text.trim();
+    await _userDirectory.recordLogin(
+      user,
+      referredByCode: referralCode.isNotEmpty ? referralCode.toUpperCase() : null,
+    );
+    if (referralCode.isNotEmpty) {
+      await _referralService.applyReferralCode(uid, referralCode);
     }
   }
 
@@ -86,6 +111,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   labelText: 'Password',
                   helperText: 'At least 6 characters',
                   border: OutlineInputBorder(),
+                ),
+              ),
+              TextField(
+                controller: _referralController,
+                textCapitalization: TextCapitalization.characters,
+                decoration: const InputDecoration(
+                  labelText: 'Referral code (optional)',
+                  hintText: 'e.g. A1B2C3D4',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.card_giftcard),
                 ),
               ),
               if (_error != null) ...[

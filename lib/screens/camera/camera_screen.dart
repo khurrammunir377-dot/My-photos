@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/folder_model.dart';
 import '../../services/folder_service.dart';
 import '../../services/photo_service.dart';
+import '../../utils/camera_filters.dart';
 import '../../utils/constants.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _capturing = false;
   String? _error;
   int _photosTakenThisSession = 0;
+  PhotoFilter _selectedFilter = PhotoFilter.normal;
 
   @override
   void initState() {
@@ -58,6 +60,7 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() => _capturing = true);
     try {
       final file = await _controller!.takePicture();
+      await CameraFilters.bakeIntoFile(file.path, _selectedFilter);
       await _photoService.savePhotoToAlbum(file.path, widget.folder.albumName);
       if (widget.folder.id != null) {
         await _folderService.incrementPhotoCount(widget.folder.id!);
@@ -118,7 +121,15 @@ class _CameraScreenState extends State<CameraScreen> {
               ? const Center(child: CircularProgressIndicator(color: Colors.white))
               : Stack(
                   children: [
-                    Positioned.fill(child: CameraPreview(_controller!)),
+                    Positioned.fill(
+                      child: FilteredPreview(filter: _selectedFilter, child: CameraPreview(_controller!)),
+                    ),
+                    Positioned(
+                      bottom: 130,
+                      left: 0,
+                      right: 0,
+                      child: _filterStrip(),
+                    ),
                     Positioned(
                       bottom: 32,
                       left: 0,
@@ -149,6 +160,53 @@ class _CameraScreenState extends State<CameraScreen> {
                     ),
                   ],
                 ),
+    );
+  }
+
+  Widget _filterStrip() {
+    return SizedBox(
+      height: 76,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: CameraFilters.options.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final option = CameraFilters.options[index];
+          final selected = option.type == _selectedFilter;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedFilter = option.type),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: selected ? AppColors.primary : Colors.white54, width: selected ? 3 : 1.5),
+                  ),
+                  child: ClipOval(
+                    child: FilteredPreview(
+                      filter: option.type,
+                      child: Container(color: Colors.grey.shade400),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  option.label,
+                  style: TextStyle(
+                    color: selected ? AppColors.primary : Colors.white70,
+                    fontSize: 11,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

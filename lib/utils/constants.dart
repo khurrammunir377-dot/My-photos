@@ -9,6 +9,14 @@ class AppConstants {
   // SharedPreferences keys
   static const String prefIsPro = "is_pro_user";
   static const String prefUserId = "user_id";
+
+  // Emails allowed to open the Admin Dashboard. Add your own email(s) here
+  // before building - this is a simple client-side gate for phase 1;
+  // for stronger protection, also add a matching check in Firestore security rules
+  // (e.g. only these UIDs can read the full `users` collection).
+  static const List<String> adminEmails = [
+    "admin@uudsaero.com", // TODO: replace with your real admin email
+  ];
 }
 
 class AppColors {

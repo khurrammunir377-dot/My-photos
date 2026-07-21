@@ -13,6 +13,7 @@ dependencies:
   # Firebase (firebase_core is the base SDK required before any other Firebase package)
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.3        # user records, referrals, admin dashboard data
   google_sign_in: ^6.2.1
 
   # Camera & Photos
@@ -35,8 +36,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
 
-  # In-app purchase (Pro subscription) - wired later
+  # In-app purchase (Pro subscription)
   in_app_purchase: ^3.2.0
+  http: ^1.2.2                   # currency conversion rate lookup for the price display
 
 dev_dependencies:
   flutter_test:
