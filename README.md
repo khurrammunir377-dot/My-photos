@@ -4,40 +4,59 @@ Capture, auto-organize, and clean up your photos. Free plan: 1 folder. Pro: unli
 
 ## Features built so far
 
-- Splash → animated Welcome screen → Login/Signup (Firebase Auth: email + Google)
+- Splash → animated Welcome screen → Login/Signup
 - Folder create/select (Free = 1 folder, Pro = unlimited)
 - Camera capture with filters (Normal/B&W/Sepia/Vivid/Cool/Warm) → auto-saves into a named album in the phone's public Gallery
 - Gallery view per folder
 - Auto-Organize: on-device duplicate/similar-photo detection
 - Subscriptions (Monthly $1 / Annual $10 / 2-Year $15), currency preview selector
-- Referral program: refer 10 people → 6 months Pro free, repeatable
-- Admin dashboard: user stats + full user list
+- Referral program: refer 10 people → 6 months Pro free, repeatable *(needs Firebase - see below)*
+- Admin dashboard: user stats + full user list *(needs Firebase - see below)*
+
+---
+
+## Current status: Firebase is OFF for easy testing
+
+`AppConstants.kFirebaseEnabled` (in `lib/utils/constants.dart`) is currently set to **`false`**. This means:
+
+- **Login/signup is local-only** — type any email, no password needed, no real account, nothing sent anywhere. Just tap Log In / Sign Up to get into the app.
+- **Referrals and the admin dashboard are hidden** — both need a real Firestore database, so they're disabled along with Firebase.
+- **Everything else works fully**: folders, camera + filters, gallery, auto-organize, the subscription pricing screen, and the orange **"Enable Test Pro"** button to unlock unlimited folders for testing.
+- The `google-services` Gradle plugin is also commented out in `android/build.gradle` and `android/app/build.gradle`, which is why the build no longer needs `google-services.json` at all right now.
+
+This is the fastest path to a working APK to install and try today.
+
+## Re-enabling Firebase later (real login, referrals, admin dashboard)
+
+When you're ready:
+
+1. Create a Firebase project at https://console.firebase.google.com → **Add project**
+2. Add an Android app with package name `com.uudsaero.myphotoorganizer` → download **`google-services.json`** → place it at `android/app/google-services.json`
+3. In Firebase Console: **Build → Authentication → Sign-in method** → enable **Email/Password** and **Google**
+4. **Build → Firestore Database → Create database** → start in test mode
+5. In `lib/utils/constants.dart`, change:
+   ```dart
+   static const bool kFirebaseEnabled = false;
+   ```
+   to
+   ```dart
+   static const bool kFirebaseEnabled = true;
+   ```
+6. In `android/app/build.gradle`, uncomment this line in the `plugins` block:
+   ```gradle
+   id "com.google.gms.google-services"
+   ```
+7. In `android/build.gradle`, uncomment this line in the `dependencies` block:
+   ```gradle
+   classpath 'com.google.gms:google-services:4.4.2'
+   ```
+8. *(Optional)* Set your real email in `AppConstants.adminEmails` to see the admin dashboard
 
 ---
 
 ## Part 1 — Setup for testing / personal use (do this now)
 
-Only these two things are required to build and use the app yourself:
-
-### 1. Create a Firebase project (free, ~5 minutes)
-1. Go to https://console.firebase.google.com → **Add project**
-2. Inside the project, click **Add app → Android**
-   - Package name: `com.uudsaero.myphotoorganizer` (must match exactly)
-3. Download the generated **`google-services.json`**
-4. Place it at `android/app/google-services.json` in this project
-5. Back in Firebase Console → **Build → Authentication → Sign-in method** → enable **Email/Password** and **Google**
-6. **Build → Firestore Database → Create database** (needed for referrals + admin dashboard). Start in **test mode** for now — it's fine for personal use, just not for a public launch (see Part 2).
-
-### 2. Set yourself as admin (optional, only if you want to see the admin dashboard)
-In `lib/utils/constants.dart`, replace the placeholder with your real email:
-```dart
-static const List<String> adminEmails = [
-  "your.real.email@gmail.com",
-];
-```
-
-### That's it — everything else works out of the box for personal testing:
-- **Subscriptions**: real purchases won't work yet (no Play Console products exist) — instead, open **Go Pro** in the app and use the orange **"Enable Test Pro"** button to unlock unlimited folders on your device for testing. Remove this button later, before Play Store launch (see Part 2).
+Nothing extra is required beyond building and installing — Firebase is off, so there's no account setup needed at all right now.
 - **Signing**: the app builds with Android's default debug signing, which is fine for installing on your own device.
 - **Currency selector, filters, auto-organize, gallery**: all work with no extra setup.
 

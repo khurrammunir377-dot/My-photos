@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../../models/folder_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/folder_service.dart';
+import '../../services/local_session_service.dart';
 import '../../utils/constants.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../camera/camera_screen.dart';
 import '../gallery/gallery_screen.dart';
 import '../organize/auto_organize_screen.dart';
 import '../subscription/subscription_screen.dart';
+import '../welcome_screen.dart';
 import 'create_folder_screen.dart';
 
 class FolderSelectScreen extends StatefulWidget {
@@ -78,6 +80,7 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
   }
 
   bool get _isAdmin {
+    if (!AppConstants.kFirebaseEnabled) return false; // admin dashboard needs Firestore
     final email = FirebaseAuth.instance.currentUser?.email;
     return email != null && AppConstants.adminEmails.contains(email);
   }
@@ -125,8 +128,17 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.textMuted),
             onPressed: () async {
-              await AuthService().signOut();
-              if (context.mounted) Navigator.of(context).pop();
+              if (AppConstants.kFirebaseEnabled) {
+                await AuthService().signOut();
+              } else {
+                await LocalSessionService().logout();
+              }
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],

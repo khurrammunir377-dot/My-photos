@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/local_session_service.dart';
 import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
 import '../folder/folder_select_screen.dart';
@@ -14,13 +15,17 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
-  final _userDirectory = UserDirectoryService();
+  final _localSession = LocalSessionService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
   String? _error;
 
   Future<void> _login() async {
+    if (!AppConstants.kFirebaseEnabled) {
+      return _loginLocally();
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -31,12 +36,31 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
       final user = _authService.currentUser;
-      if (user != null) await _userDirectory.recordLogin(user);
+      if (user != null) await UserDirectoryService().recordLogin(user);
       _goToApp();
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Simple on-device login used while Firebase is disabled for testing -
+  /// no real validation, just remembers the email you type.
+  Future<void> _loginLocally() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() => _error = 'Enter any email to continue (test mode - no real account needed)');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    await _localSession.login(email);
+    if (mounted) {
+      setState(() => _loading = false);
+      _goToApp();
     }
   }
 
@@ -49,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await _authService.signInWithGoogle();
       if (result != null) {
         final user = _authService.currentUser;
-        if (user != null) await _userDirectory.recordLogin(user);
+        if (user != null) await UserDirectoryService().recordLogin(user);
         _goToApp();
       }
     } catch (e) {
@@ -79,19 +103,26 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 12),
               const Text('Welcome back', style: AppTextStyles.heading),
               const SizedBox(height: 6),
-              const Text('Log in to continue', style: AppTextStyles.subheading),
+              Text(
+                AppConstants.kFirebaseEnabled
+                    ? 'Log in to continue'
+                    : 'Test mode - type any email, no real account needed',
+                style: AppTextStyles.subheading,
+              ),
               const SizedBox(height: 28),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
               ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
-              ),
+              if (AppConstants.kFirebaseEnabled) ...[
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                ),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(_error!, style: const TextStyle(color: AppColors.error)),
@@ -107,15 +138,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       : const Text('Log In', style: AppTextStyles.button),
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: _loading ? null : _loginWithGoogle,
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: const Text('Continue with Google'),
+              if (AppConstants.kFirebaseEnabled) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: _loading ? null : _loginWithGoogle,
+                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    label: const Text('Continue with Google'),
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () => Navigator.pushReplacement(

@@ -4,8 +4,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 /// Wraps Firebase Auth. Auth is only required at login time (needs internet);
 /// once signed in, Firebase caches the session so the rest of the app works offline.
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  GoogleSignIn get _googleSignIn => GoogleSignIn();
 
   User? get currentUser => _auth.currentUser;
   Stream<User?> get authStateChanges => _auth.authStateChanges();

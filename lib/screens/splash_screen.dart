@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../services/local_session_service.dart';
 import '../utils/constants.dart';
 import 'welcome_screen.dart';
 import 'folder/folder_select_screen.dart';
@@ -26,12 +27,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Timer(const Duration(milliseconds: 1600), _navigateNext);
   }
 
-  void _navigateNext() {
+  Future<void> _navigateNext() async {
     if (!mounted) return;
-    final user = FirebaseAuth.instance.currentUser;
+    final loggedIn = AppConstants.kFirebaseEnabled
+        ? FirebaseAuth.instance.currentUser != null
+        : await LocalSessionService().isLoggedIn();
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => user != null ? const FolderSelectScreen() : const WelcomeScreen(),
+        builder: (_) => loggedIn ? const FolderSelectScreen() : const WelcomeScreen(),
       ),
     );
   }

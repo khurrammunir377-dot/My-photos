@@ -10,7 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// service's transaction, or better, move this logic into a Cloud Function
 /// before launch so a modified APK can't fake referrals. See README.
 class ReferralService {
-  final _users = FirebaseFirestore.instance.collection('users');
+  CollectionReference<Map<String, dynamic>> get _users => FirebaseFirestore.instance.collection('users');
   static const int referralsNeededForReward = 10;
   static const int rewardMonths = 6;
 

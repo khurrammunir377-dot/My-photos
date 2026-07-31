@@ -6,6 +6,13 @@ class AppConstants {
   static const String albumPrefix = "MyPhotoOrganizer"; // e.g. MyPhotoOrganizer_ProjectSite
   static const int freeTierFolderLimit = 1;
 
+  // Master switch for Firebase (Auth + Firestore). Set to true once you've:
+  // 1) created a Firebase project, 2) added google-services.json to android/app/,
+  // 3) re-added the google-services Gradle plugin (see README "Re-enabling Firebase").
+  // While false, the app uses a simple local-only login instead, so you can test
+  // everything else (camera, folders, filters, gallery, auto-organize) right away.
+  static const bool kFirebaseEnabled = false;
+
   // SharedPreferences keys
   static const String prefIsPro = "is_pro_user";
   static const String prefUserId = "user_id";

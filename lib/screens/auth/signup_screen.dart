@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/local_session_service.dart';
 import '../../services/referral_service.dart';
 import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
@@ -15,8 +16,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _authService = AuthService();
-  final _userDirectory = UserDirectoryService();
-  final _referralService = ReferralService();
+  final _localSession = LocalSessionService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _referralController = TextEditingController();
@@ -24,6 +24,10 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _error;
 
   Future<void> _signup() async {
+    if (!AppConstants.kFirebaseEnabled) {
+      return _signupLocally();
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -39,6 +43,25 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() => _error = _authService.friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Simple on-device signup used while Firebase is disabled for testing -
+  /// no real validation, referral codes are ignored (they need Firestore).
+  Future<void> _signupLocally() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() => _error = 'Enter any email to continue (test mode - no real account needed)');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    await _localSession.login(email);
+    if (mounted) {
+      setState(() => _loading = false);
+      _goToApp();
     }
   }
 
@@ -67,12 +90,12 @@ class _SignupScreenState extends State<SignupScreen> {
     if (user == null) return;
 
     final referralCode = _referralController.text.trim();
-    await _userDirectory.recordLogin(
+    await UserDirectoryService().recordLogin(
       user,
       referredByCode: referralCode.isNotEmpty ? referralCode.toUpperCase() : null,
     );
     if (referralCode.isNotEmpty) {
-      await _referralService.applyReferralCode(uid, referralCode);
+      await ReferralService().applyReferralCode(uid, referralCode);
     }
   }
 
@@ -96,33 +119,41 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 12),
               const Text('Create your account', style: AppTextStyles.heading),
               const SizedBox(height: 6),
-              const Text('Start organizing your photos in seconds', style: AppTextStyles.subheading),
+              Text(
+                AppConstants.kFirebaseEnabled
+                    ? 'Start organizing your photos in seconds'
+                    : 'Test mode - type any email, no real account needed',
+                style: AppTextStyles.subheading,
+              ),
               const SizedBox(height: 28),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
               ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  helperText: 'At least 6 characters',
-                  border: OutlineInputBorder(),
+              if (AppConstants.kFirebaseEnabled) ...[
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    helperText: 'At least 6 characters',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              TextField(
-                controller: _referralController,
-                textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: 'Referral code (optional)',
-                  hintText: 'e.g. A1B2C3D4',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.card_giftcard),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _referralController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: const InputDecoration(
+                    labelText: 'Referral code (optional)',
+                    hintText: 'e.g. A1B2C3D4',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.card_giftcard),
+                  ),
                 ),
-              ),
+              ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(_error!, style: const TextStyle(color: AppColors.error)),
@@ -138,15 +169,17 @@ class _SignupScreenState extends State<SignupScreen> {
                       : const Text('Sign Up', style: AppTextStyles.button),
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: _loading ? null : _signupWithGoogle,
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: const Text('Continue with Google'),
+              if (AppConstants.kFirebaseEnabled) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: _loading ? null : _signupWithGoogle,
+                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    label: const Text('Continue with Google'),
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () => Navigator.pushReplacement(

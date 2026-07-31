@@ -12,7 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 /// dashboard read from - it's the single source of truth for user state,
 /// separate from the local per-device SQLite folder data.
 class UserDirectoryService {
-  final CollectionReference<Map<String, dynamic>> _users =
+  CollectionReference<Map<String, dynamic>> get _users =>
       FirebaseFirestore.instance.collection('users');
 
   String _referralCodeFor(String uid) => uid.substring(0, 8).toUpperCase();

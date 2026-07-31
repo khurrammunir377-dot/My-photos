@@ -5,7 +5,9 @@ import 'utils/constants.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  if (AppConstants.kFirebaseEnabled) {
+    await Firebase.initializeApp();
+  }
   runApp(const MyPhotoOrganizerApp());
 }
 

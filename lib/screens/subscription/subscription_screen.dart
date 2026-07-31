@@ -38,14 +38,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Future<void> _toggleTestProMode() async {
     final newValue = !_isProNow;
     await _folderService.setProUser(newValue);
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      await UserDirectoryService().setProStatus(
-        uid: uid,
-        isPro: newValue,
-        expiryDate: newValue ? DateTime.now().add(const Duration(days: 30)) : null,
-        planId: newValue ? 'test_mode' : null,
-      );
+    if (AppConstants.kFirebaseEnabled) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        await UserDirectoryService().setProStatus(
+          uid: uid,
+          isPro: newValue,
+          expiryDate: newValue ? DateTime.now().add(const Duration(days: 30)) : null,
+          planId: newValue ? 'test_mode' : null,
+        );
+      }
     }
     setState(() => _isProNow = newValue);
     if (mounted) {
@@ -108,7 +110,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _init() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = AppConstants.kFirebaseEnabled ? FirebaseAuth.instance.currentUser?.uid : null;
 
     _subscriptionService.startListening(
       uid: uid ?? '',
@@ -251,7 +253,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          _referralCard(),
+          if (AppConstants.kFirebaseEnabled)
+            _referralCard()
+          else
+            Card(
+              color: Colors.grey.withOpacity(0.08),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text(
+                  'Referral program will be available once Firebase is set up.',
+                  style: AppTextStyles.subheading,
+                ),
+              ),
+            ),
         ],
       ),
     );
