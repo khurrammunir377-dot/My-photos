@@ -18,7 +18,7 @@ dependencies:
 
   # Camera & Photos
   camera: ^0.11.0+2
-  gal: ^2.3.0                    # save photos to public gallery in named albums
+  saver_gallery: ^5.0.0          # save photos to public gallery in named albums (replaces gal, which has a broken/unmaintained Android build.gradle)
   photo_manager: ^3.6.1          # read/query existing device photos for auto-organize
   permission_handler: ^11.3.1
 

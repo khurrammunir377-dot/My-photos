@@ -6,6 +6,7 @@ import '../../services/currency_helper.dart';
 import '../../services/folder_service.dart';
 import '../../services/referral_service.dart';
 import '../../services/subscription_service.dart';
+import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -32,10 +33,78 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   int _referralCount = 0;
   bool _purchasing = false;
 
+  bool _isProNow = false;
+
+  Future<void> _toggleTestProMode() async {
+    final newValue = !_isProNow;
+    await _folderService.setProUser(newValue);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      await UserDirectoryService().setProStatus(
+        uid: uid,
+        isPro: newValue,
+        expiryDate: newValue ? DateTime.now().add(const Duration(days: 30)) : null,
+        planId: newValue ? 'test_mode' : null,
+      );
+    }
+    setState(() => _isProNow = newValue);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(newValue ? 'Test Pro enabled for 30 days' : 'Test Pro disabled')),
+      );
+    }
+  }
+
+  Widget _testModeCard() {
+    return Card(
+      color: Colors.amber.withOpacity(0.12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.science_outlined, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('Developer Test Mode', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Real purchases won\'t work until your app has products set up in Play Console. '
+              'Use this to test Pro features (unlimited folders, etc.) on your own device in the meantime. '
+              'Remove this card before publishing to Play Store.',
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                onPressed: _toggleTestProMode,
+                child: Text(_isProNow ? 'Disable Test Pro' : 'Enable Test Pro (30 days)',
+                    style: const TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadCurrentProStatus();
     _init();
+  }
+
+  Future<void> _loadCurrentProStatus() async {
+    final isPro = await _folderService.isProUser();
+    if (mounted) setState(() => _isProNow = isPro);
   }
 
   Future<void> _init() async {
@@ -160,6 +229,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             'Unlimited folders, no watermark, priority support.',
             style: AppTextStyles.subheading,
           ),
+          const SizedBox(height: 20),
+          _testModeCard(),
           const SizedBox(height: 20),
           if (_productError != null)
             Padding(

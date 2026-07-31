@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:gal/gal.dart';
+import 'dart:typed_data';
+import 'package:saver_gallery/saver_gallery.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -14,16 +15,22 @@ class PhotoService {
   }
 
   /// Saves a captured photo file into the given album name (creates the album if needed).
-  /// Uses `gal`, which writes via MediaStore on Android 10+ (scoped storage compliant).
+  /// Uses `saver_gallery`, which writes via MediaStore on Android 10+ (scoped storage compliant).
   Future<void> savePhotoToAlbum(String filePath, String albumName) async {
-    final hasAccess = await Gal.hasAccess();
-    if (!hasAccess) {
-      final granted = await Gal.requestAccess();
-      if (!granted) {
-        throw Exception('Gallery access denied. Enable photo permissions in settings.');
-      }
+    final file = File(filePath);
+    final bytes = await file.readAsBytes();
+    final fileName = file.uri.pathSegments.last;
+
+    final result = await SaverGallery.saveImage(
+      Uint8List.fromList(bytes),
+      fileName: fileName,
+      albumPath: albumName, // saves under Pictures/<albumName> on Android
+      skipIfExists: false,
+    );
+
+    if (result.isSuccess != true) {
+      throw Exception('Failed to save photo to gallery. Check photo permissions in settings.');
     }
-    await Gal.putImage(filePath, album: albumName);
   }
 
   /// Fetches all photo assets currently on the device (used by Auto-Organize).
@@ -48,3 +55,4 @@ class PhotoService {
     return asset.file;
   }
 }
+
