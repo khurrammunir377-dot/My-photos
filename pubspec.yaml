@@ -32,6 +32,9 @@ dependencies:
   image: ^4.2.0
   crypto: ^3.0.5
 
+  # Face detection (for the People/face-grouping feature)
+  google_mlkit_face_detection: ^0.13.1
+
   # UI
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1

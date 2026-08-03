@@ -27,29 +27,56 @@ class AppConstants {
 }
 
 class AppColors {
-  static const Color primary = Color(0xFF4FC3F7);   // brand blue
-  static const Color accent = Color(0xFF2ECC71);    // green accent
-  static const Color background = Color(0xFFF7F8FA);
+  // Vibrant multi-stop brand gradient - used across headers, buttons, active states
+  static const Color gradientStart = Color(0xFF7C4DFF); // violet
+  static const Color gradientMid = Color(0xFFFF4D9D);   // hot pink
+  static const Color gradientEnd = Color(0xFFFF8A3D);   // sunset orange
+
+  static const Color primary = Color(0xFF7C4DFF);
+  static const Color secondary = Color(0xFFFF4D9D);
+  static const Color accent = Color(0xFF2ECC71);
+  static const Color background = Color(0xFFF8F7FC);
   static const Color cardBackground = Colors.white;
-  static const Color textDark = Color(0xFF1E2A38);
-  static const Color textMuted = Color(0xFF7C8A99);
+  static const Color textDark = Color(0xFF1B1530);
+  static const Color textMuted = Color(0xFF8B87A3);
   static const Color error = Color(0xFFE74C3C);
   static const Color proGold = Color(0xFFFFB300);
+
+  // Playful accent set used for folder/person icon backgrounds so each item
+  // gets a distinct, colorful identity instead of one repeated brand color.
+  static const List<Color> accentPalette = [
+    Color(0xFF7C4DFF),
+    Color(0xFFFF4D9D),
+    Color(0xFFFF8A3D),
+    Color(0xFF2ECC71),
+    Color(0xFF29B6F6),
+    Color(0xFFFFC107),
+  ];
+
+  static const LinearGradient brandGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [gradientStart, gradientMid, gradientEnd],
+  );
+
+  static Color accentFor(int index) => accentPalette[index % accentPalette.length];
 }
 
 class AppTextStyles {
   static const TextStyle heading = TextStyle(
     fontSize: 24,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.w800,
     color: AppColors.textDark,
+    letterSpacing: -0.3,
   );
   static const TextStyle subheading = TextStyle(
-    fontSize: 16,
+    fontSize: 15,
     color: AppColors.textMuted,
+    height: 1.4,
   );
   static const TextStyle button = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
     color: Colors.white,
   );
 }

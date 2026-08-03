@@ -17,8 +17,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   late final AnimationController _entranceController;
 
   static const _gradientSets = [
-    [Color(0xFF4FC3F7), Color(0xFF7C4DFF), Color(0xFF26C6DA)],
-    [Color(0xFF7C4DFF), Color(0xFFFF6EC7), Color(0xFF4FC3F7)],
+    [Color(0xFF7C4DFF), Color(0xFFFF4D9D), Color(0xFFFF8A3D)],
+    [Color(0xFFFF4D9D), Color(0xFFFF8A3D), Color(0xFF7C4DFF)],
   ];
 
   @override

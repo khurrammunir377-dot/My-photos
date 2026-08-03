@@ -3,7 +3,7 @@ import '../../services/auth_service.dart';
 import '../../services/local_session_service.dart';
 import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
-import '../folder/folder_select_screen.dart';
+import '../main_shell.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _goToApp() {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const FolderSelectScreen()),
+      MaterialPageRoute(builder: (_) => const MainShell()),
       (route) => false,
     );
   }

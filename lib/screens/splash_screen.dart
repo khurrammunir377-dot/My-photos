@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/local_session_service.dart';
 import '../utils/constants.dart';
 import 'welcome_screen.dart';
-import 'folder/folder_select_screen.dart';
+import 'main_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => loggedIn ? const FolderSelectScreen() : const WelcomeScreen(),
+        builder: (_) => loggedIn ? const MainShell() : const WelcomeScreen(),
       ),
     );
   }
@@ -60,11 +60,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 width: 110,
                 height: 110,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  gradient: AppColors.brandGradient,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withOpacity(0.35),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
                     ),
