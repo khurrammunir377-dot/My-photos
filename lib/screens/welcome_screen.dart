@@ -140,7 +140,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
           BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 12)),
         ],
       ),
-      child: const Icon(Icons.photo_library_rounded, color: AppColors.primary, size: 52),
+      child: Icon(Icons.photo_library_rounded, color: AppColors.primary, size: 52),
     );
   }
 
@@ -182,7 +182,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 16, offset: const Offset(0, 6))],
         ),
-        child: const Text(
+        child: Text(
           'Get Started',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
         ),

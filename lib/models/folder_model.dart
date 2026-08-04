@@ -4,6 +4,7 @@ class FolderModel {
   final String albumName; // actual name used in device gallery (prefixed, sanitized)
   final DateTime createdAt;
   final int photoCount;
+  final int? parentId; // null = top-level folder, otherwise the id of the parent folder
 
   FolderModel({
     this.id,
@@ -11,6 +12,7 @@ class FolderModel {
     required this.albumName,
     required this.createdAt,
     this.photoCount = 0,
+    this.parentId,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +22,7 @@ class FolderModel {
       'albumName': albumName,
       'createdAt': createdAt.toIso8601String(),
       'photoCount': photoCount,
+      'parentId': parentId,
     };
   }
 
@@ -30,6 +33,7 @@ class FolderModel {
       albumName: map['albumName'] as String,
       createdAt: DateTime.parse(map['createdAt'] as String),
       photoCount: map['photoCount'] as int? ?? 0,
+      parentId: map['parentId'] as int?,
     );
   }
 
@@ -40,6 +44,7 @@ class FolderModel {
       albumName: albumName,
       createdAt: createdAt,
       photoCount: photoCount ?? this.photoCount,
+      parentId: parentId,
     );
   }
 }

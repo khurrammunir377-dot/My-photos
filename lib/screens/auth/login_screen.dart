@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../services/local_session_service.dart';
+import '../../services/remembered_email_service.dart';
 import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
 import '../main_shell.dart';
@@ -16,10 +17,28 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   final _localSession = LocalSessionService();
+  final _rememberedEmail = RememberedEmailService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
   String? _error;
+  String? _rememberedEmailValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillRememberedEmail();
+  }
+
+  Future<void> _prefillRememberedEmail() async {
+    final email = await _rememberedEmail.get();
+    if (email != null && mounted) {
+      setState(() {
+        _rememberedEmailValue = email;
+        _emailController.text = email;
+      });
+    }
+  }
 
   Future<void> _login() async {
     if (!AppConstants.kFirebaseEnabled) {
@@ -37,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       final user = _authService.currentUser;
       if (user != null) await UserDirectoryService().recordLogin(user);
+      await _rememberedEmail.save(_emailController.text.trim());
       _goToApp();
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
@@ -58,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     await _localSession.login(email);
+    await _rememberedEmail.save(email);
     if (mounted) {
       setState(() => _loading = false);
       _goToApp();
@@ -74,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result != null) {
         final user = _authService.currentUser;
         if (user != null) await UserDirectoryService().recordLogin(user);
+        if (user?.email != null) await _rememberedEmail.save(user!.email!);
         _goToApp();
       }
     } catch (e) {

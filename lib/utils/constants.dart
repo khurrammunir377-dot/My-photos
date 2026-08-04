@@ -26,14 +26,18 @@ class AppConstants {
   ];
 }
 
-class AppColors {
-  // Vibrant multi-stop brand gradient - used across headers, buttons, active states
-  static const Color gradientStart = Color(0xFF7C4DFF); // violet
-  static const Color gradientMid = Color(0xFFFF4D9D);   // hot pink
-  static const Color gradientEnd = Color(0xFFFF8A3D);   // sunset orange
+import '../services/theme_controller.dart';
 
-  static const Color primary = Color(0xFF7C4DFF);
-  static const Color secondary = Color(0xFFFF4D9D);
+class AppColors {
+  // Dynamic - reads the currently selected theme (see ThemeController /
+  // AppThemes). Every screen using AppColors.primary / brandGradient /
+  // accentFor(...) updates automatically when the user changes theme.
+  static Color get primary => ThemeController.instance.current.primary;
+  static Color get secondary => ThemeController.instance.current.secondary;
+  static List<Color> get accentPalette => ThemeController.instance.current.accentPalette;
+  static LinearGradient get brandGradient => ThemeController.instance.current.gradient;
+
+  // Fixed neutrals - stay the same across all themes for readability/contrast.
   static const Color accent = Color(0xFF2ECC71);
   static const Color background = Color(0xFFF8F7FC);
   static const Color cardBackground = Colors.white;
@@ -41,23 +45,6 @@ class AppColors {
   static const Color textMuted = Color(0xFF8B87A3);
   static const Color error = Color(0xFFE74C3C);
   static const Color proGold = Color(0xFFFFB300);
-
-  // Playful accent set used for folder/person icon backgrounds so each item
-  // gets a distinct, colorful identity instead of one repeated brand color.
-  static const List<Color> accentPalette = [
-    Color(0xFF7C4DFF),
-    Color(0xFFFF4D9D),
-    Color(0xFFFF8A3D),
-    Color(0xFF2ECC71),
-    Color(0xFF29B6F6),
-    Color(0xFFFFC107),
-  ];
-
-  static const LinearGradient brandGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [gradientStart, gradientMid, gradientEnd],
-  );
 
   static Color accentFor(int index) => accentPalette[index % accentPalette.length];
 }

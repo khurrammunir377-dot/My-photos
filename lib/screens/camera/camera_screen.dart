@@ -19,8 +19,11 @@ class _CameraScreenState extends State<CameraScreen> {
   final _folderService = FolderService();
 
   CameraController? _controller;
+  List<CameraDescription> _cameras = [];
+  int _cameraIndex = 0;
   bool _ready = false;
   bool _capturing = false;
+  bool _switching = false;
   String? _error;
   int _photosTakenThisSession = 0;
   PhotoFilter _selectedFilter = PhotoFilter.normal;
@@ -39,20 +42,38 @@ class _CameraScreenState extends State<CameraScreen> {
     }
     try {
       final cameras = await availableCameras();
-      final backCamera = cameras.firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first,
-      );
-      final controller = CameraController(backCamera, ResolutionPreset.high, enableAudio: false);
-      await controller.initialize();
-      if (!mounted) return;
-      setState(() {
-        _controller = controller;
-        _ready = true;
-      });
+      final backIndex = cameras.indexWhere((c) => c.lensDirection == CameraLensDirection.back);
+      _cameras = cameras;
+      _cameraIndex = backIndex >= 0 ? backIndex : 0;
+      await _startController(_cameraIndex);
     } catch (e) {
       setState(() => _error = 'Could not start camera: $e');
     }
+  }
+
+  Future<void> _startController(int index) async {
+    // veryHigh gives noticeably sharper captures than the previous `high`
+    // preset while still being broadly device-compatible (max can fail to
+    // initialize on some lower-end hardware).
+    final controller = CameraController(_cameras[index], ResolutionPreset.veryHigh, enableAudio: false);
+    await controller.initialize();
+    if (!mounted) return;
+    setState(() {
+      _controller = controller;
+      _ready = true;
+    });
+  }
+
+  Future<void> _switchCamera() async {
+    if (_cameras.length < 2 || _switching) return;
+    setState(() {
+      _switching = true;
+      _ready = false;
+    });
+    await _controller?.dispose();
+    _cameraIndex = (_cameraIndex + 1) % _cameras.length;
+    await _startController(_cameraIndex);
+    if (mounted) setState(() => _switching = false);
   }
 
   Future<void> _capture() async {
@@ -101,6 +122,15 @@ class _CameraScreenState extends State<CameraScreen> {
         elevation: 0,
         title: Text(widget.folder.name, style: const TextStyle(color: Colors.white)),
         actions: [
+          if (_cameras.length > 1)
+            IconButton(
+              icon: _switching
+                  ? const SizedBox(
+                      width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.cameraswitch_outlined, color: Colors.white),
+              onPressed: _switching ? null : _switchCamera,
+              tooltip: 'Switch camera',
+            ),
           if (_photosTakenThisSession > 0)
             Center(
               child: Padding(

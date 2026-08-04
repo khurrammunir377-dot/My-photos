@@ -3,10 +3,11 @@ import '../../models/folder_model.dart';
 import '../../services/folder_service.dart';
 import '../../utils/constants.dart';
 import '../camera/camera_screen.dart';
+import 'create_folder_screen.dart';
+import 'folder_detail_screen.dart';
 import '../gallery/gallery_screen.dart';
 import '../organize/auto_organize_screen.dart';
 import '../subscription/subscription_screen.dart';
-import 'create_folder_screen.dart';
 
 class FolderSelectScreen extends StatefulWidget {
   const FolderSelectScreen({super.key});
@@ -29,7 +30,7 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
   }
 
   Future<void> _load() async {
-    final folders = await _folderService.getAllFolders();
+    final folders = await _folderService.getTopLevelFolders();
     final isPro = await _folderService.isProUser();
     if (mounted) {
       setState(() {
@@ -132,7 +133,7 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: AppColors.brandGradient,
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28), bottomRight: Radius.circular(28)),
       ),
@@ -259,21 +260,37 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(14)),
-              child: Icon(Icons.folder_rounded, color: color, size: 26),
-            ),
-            const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(folder.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                  const SizedBox(height: 2),
-                  Text('${folder.photoCount} photos', style: AppTextStyles.subheading),
-                ],
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => FolderDetailScreen(folder: folder)),
+                  );
+                  _load();
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(14)),
+                      child: Icon(Icons.folder_rounded, color: color, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(folder.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                          const SizedBox(height: 2),
+                          Text('${folder.photoCount} photos', style: AppTextStyles.subheading),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             IconButton(

@@ -42,6 +42,7 @@ dependencies:
   # In-app purchase (Pro subscription)
   in_app_purchase: ^3.2.0
   http: ^1.2.2                   # currency conversion rate lookup for the price display
+  share_plus: ^13.1.0             # Share App from the drawer menu
 
 dev_dependencies:
   flutter_test:

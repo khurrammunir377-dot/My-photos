@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_drawer.dart';
 import 'folder/folder_select_screen.dart';
 import 'people/people_screen.dart';
 import 'profile/profile_screen.dart';
@@ -14,6 +15,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final _screens = const [
     FolderSelectScreen(),
@@ -32,7 +34,31 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      key: _scaffoldKey,
+      drawer: const AppDrawer(),
+      body: Stack(
+        children: [
+          IndexedStack(index: _index, children: _screens),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 12),
+              child: GestureDetector(
+                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 10, offset: const Offset(0, 3))],
+                  ),
+                  child: const Icon(Icons.menu_rounded, color: AppColors.textDark, size: 22),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

@@ -22,7 +22,7 @@ class FolderService {
     final path = join(dbPath, 'my_photo_organizer.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE folders (
@@ -30,9 +30,15 @@ class FolderService {
             name TEXT NOT NULL,
             albumName TEXT NOT NULL UNIQUE,
             createdAt TEXT NOT NULL,
-            photoCount INTEGER NOT NULL DEFAULT 0
+            photoCount INTEGER NOT NULL DEFAULT 0,
+            parentId INTEGER
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE folders ADD COLUMN parentId INTEGER');
+        }
       },
     );
   }
@@ -49,11 +55,13 @@ class FolderService {
     await prefs.setBool(AppConstants.prefIsPro, isPro);
   }
 
-  /// Returns true if the user is allowed to create another folder.
+  /// Returns true if the user is allowed to create another TOP-LEVEL folder.
+  /// Subfolders (inside an existing folder) are always allowed regardless of
+  /// tier - the Free/Pro limit applies to top-level folders only.
   Future<bool> canCreateFolder() async {
     final isPro = await isProUser();
     if (isPro) return true;
-    final folders = await getAllFolders();
+    final folders = await getTopLevelFolders();
     return folders.length < AppConstants.freeTierFolderLimit;
   }
 
@@ -65,23 +73,39 @@ class FolderService {
     return rows.map((r) => FolderModel.fromMap(r)).toList();
   }
 
+  Future<List<FolderModel>> getTopLevelFolders() async {
+    final db = await database;
+    final rows = await db.query('folders', where: 'parentId IS NULL', orderBy: 'createdAt DESC');
+    return rows.map((r) => FolderModel.fromMap(r)).toList();
+  }
+
+  Future<List<FolderModel>> getSubfolders(int parentId) async {
+    final db = await database;
+    final rows = await db.query('folders', where: 'parentId = ?', whereArgs: [parentId], orderBy: 'createdAt DESC');
+    return rows.map((r) => FolderModel.fromMap(r)).toList();
+  }
+
   /// Sanitizes a user-entered folder name into a safe album name for the device gallery.
   String buildAlbumName(String folderName) {
     final sanitized = folderName.trim().replaceAll(RegExp(r'[^a-zA-Z0-9 _-]'), '');
     return '${AppConstants.albumPrefix}_$sanitized';
   }
 
-  Future<FolderModel> createFolder(String name) async {
-    final allowed = await canCreateFolder();
-    if (!allowed) {
-      throw Exception(
-          'Free plan allows only ${AppConstants.freeTierFolderLimit} folder. Upgrade to Pro for unlimited folders.');
+  Future<FolderModel> createFolder(String name, {int? parentId}) async {
+    if (parentId == null) {
+      // Only top-level folder creation is gated by Free/Pro tier
+      final allowed = await canCreateFolder();
+      if (!allowed) {
+        throw Exception(
+            'Free plan allows only ${AppConstants.freeTierFolderLimit} folder. Upgrade to Pro for unlimited folders.');
+      }
     }
     final db = await database;
     final folder = FolderModel(
       name: name,
       albumName: buildAlbumName(name),
       createdAt: DateTime.now(),
+      parentId: parentId,
     );
     final id = await db.insert('folders', folder.toMap());
     return FolderModel(
@@ -89,6 +113,7 @@ class FolderService {
       name: folder.name,
       albumName: folder.albumName,
       createdAt: folder.createdAt,
+      parentId: parentId,
     );
   }
 

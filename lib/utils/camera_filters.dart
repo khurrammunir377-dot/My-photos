@@ -2,7 +2,20 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 
-enum PhotoFilter { normal, blackAndWhite, sepia, vivid, cool, warm }
+enum PhotoFilter {
+  normal,
+  blackAndWhite,
+  sepia,
+  vivid,
+  cool,
+  warm,
+  noir,
+  fade,
+  vintage,
+  chrome,
+  mono,
+  dramatic,
+}
 
 class FilterOption {
   final PhotoFilter type;
@@ -59,6 +72,48 @@ class CameraFilters {
     0, 0, 0, 1, 0,
   ];
 
+  static const noir = <double>[
+    0.462, 0.826, 0.154, 0, -51,
+    0.462, 0.826, 0.154, 0, -51,
+    0.462, 0.826, 0.154, 0, -51,
+    0, 0, 0, 1, 0,
+  ];
+
+  static const fade = <double>[
+    0.85, 0, 0, 0, 30,
+    0, 0.85, 0, 0, 30,
+    0, 0, 0.85, 0, 30,
+    0, 0, 0, 1, 0,
+  ];
+
+  static const vintage = <double>[
+    0.6, 0.5, 0.2, 0, 12,
+    0.5, 0.5, 0.2, 0, 8,
+    0.4, 0.4, 0.3, 0, 8,
+    0, 0, 0, 1, 0,
+  ];
+
+  static const chrome = <double>[
+    1.5, -0.2, -0.1, 0, -12,
+    -0.1, 1.5, -0.2, 0, -12,
+    -0.1, -0.2, 1.5, 0, -12,
+    0, 0, 0, 1, 0,
+  ];
+
+  static const mono = <double>[
+    0.33, 0.59, 0.11, 0, 0,
+    0.33, 0.59, 0.11, 0, 8,
+    0.33, 0.59, 0.11, 0, 35,
+    0, 0, 0, 1, 0,
+  ];
+
+  static const dramatic = <double>[
+    1.5, 0, 0, 0, -60,
+    0, 1.5, 0, 0, -60,
+    0, 0, 1.5, 0, -60,
+    0, 0, 0, 1, 0,
+  ];
+
   static const List<FilterOption> options = [
     FilterOption(PhotoFilter.normal, 'Normal', identity),
     FilterOption(PhotoFilter.blackAndWhite, 'B&W', grayscale),
@@ -66,6 +121,12 @@ class CameraFilters {
     FilterOption(PhotoFilter.vivid, 'Vivid', vivid),
     FilterOption(PhotoFilter.cool, 'Cool', cool),
     FilterOption(PhotoFilter.warm, 'Warm', warm),
+    FilterOption(PhotoFilter.noir, 'Noir', noir),
+    FilterOption(PhotoFilter.fade, 'Fade', fade),
+    FilterOption(PhotoFilter.vintage, 'Vintage', vintage),
+    FilterOption(PhotoFilter.chrome, 'Chrome', chrome),
+    FilterOption(PhotoFilter.mono, 'Mono', mono),
+    FilterOption(PhotoFilter.dramatic, 'Dramatic', dramatic),
   ];
 
   static FilterOption forType(PhotoFilter type) {
@@ -96,6 +157,24 @@ class CameraFilters {
         break;
       case PhotoFilter.warm:
         processed = img.colorOffset(decoded, red: 20, green: 8);
+        break;
+      case PhotoFilter.noir:
+        processed = img.adjustColor(img.grayscale(decoded), contrast: 1.4);
+        break;
+      case PhotoFilter.fade:
+        processed = img.adjustColor(decoded, contrast: 0.8, saturation: 0.85, brightness: 1.08);
+        break;
+      case PhotoFilter.vintage:
+        processed = img.adjustColor(img.sepia(decoded, amount: 0.6), contrast: 0.9, saturation: 0.9);
+        break;
+      case PhotoFilter.chrome:
+        processed = img.adjustColor(decoded, saturation: 1.6, contrast: 1.3);
+        break;
+      case PhotoFilter.mono:
+        processed = img.colorOffset(img.grayscale(decoded), blue: 30);
+        break;
+      case PhotoFilter.dramatic:
+        processed = img.adjustColor(decoded, contrast: 1.5, brightness: 0.9);
         break;
       case PhotoFilter.normal:
         processed = decoded;

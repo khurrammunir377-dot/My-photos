@@ -5,6 +5,7 @@ import '../../services/folder_service.dart';
 import '../../services/local_session_service.dart';
 import '../../utils/constants.dart';
 import '../admin/admin_dashboard_screen.dart';
+import '../settings/theme_settings_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../welcome_screen.dart';
 
@@ -114,6 +115,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: 'Go Pro',
               subtitle: 'Unlimited folders, plans & referrals',
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen())).then((_) => _load()),
+            ),
+            _tile(
+              icon: Icons.palette_outlined,
+              iconColor: AppColors.secondary,
+              title: 'Change Theme',
+              subtitle: 'Pick from 10 color themes',
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ThemeSettingsScreen())),
             ),
             if (_isAdmin)
               _tile(

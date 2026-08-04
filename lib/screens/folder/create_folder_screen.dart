@@ -3,7 +3,8 @@ import '../../services/folder_service.dart';
 import '../../utils/constants.dart';
 
 class CreateFolderScreen extends StatefulWidget {
-  const CreateFolderScreen({super.key});
+  final int? parentId;
+  const CreateFolderScreen({super.key, this.parentId});
 
   @override
   State<CreateFolderScreen> createState() => _CreateFolderScreenState();
@@ -26,7 +27,7 @@ class _CreateFolderScreenState extends State<CreateFolderScreen> {
       _error = null;
     });
     try {
-      await _folderService.createFolder(name);
+      await _folderService.createFolder(name, parentId: widget.parentId);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -42,14 +43,14 @@ class _CreateFolderScreenState extends State<CreateFolderScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text('New Folder', style: TextStyle(color: AppColors.textDark)),
+        title: Text(widget.parentId != null ? 'New Subfolder' : 'New Folder', style: const TextStyle(color: AppColors.textDark)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Name your folder', style: AppTextStyles.heading),
+            Text(widget.parentId != null ? 'Name your subfolder' : 'Name your folder', style: AppTextStyles.heading),
             const SizedBox(height: 6),
             const Text(
               'Photos you take will be saved into this album automatically.',

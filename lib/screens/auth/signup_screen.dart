@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../services/local_session_service.dart';
 import '../../services/referral_service.dart';
+import '../../services/remembered_email_service.dart';
 import '../../services/user_directory_service.dart';
 import '../../utils/constants.dart';
 import '../main_shell.dart';
@@ -17,6 +18,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _authService = AuthService();
   final _localSession = LocalSessionService();
+  final _rememberedEmail = RememberedEmailService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _referralController = TextEditingController();
@@ -38,6 +40,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _passwordController.text.trim(),
       );
       await _completeSignupBookkeeping(credential.user?.uid);
+      await _rememberedEmail.save(_emailController.text.trim());
       _goToApp();
     } catch (e) {
       setState(() => _error = _authService.friendlyError(e));
@@ -59,6 +62,7 @@ class _SignupScreenState extends State<SignupScreen> {
       _error = null;
     });
     await _localSession.login(email);
+    await _rememberedEmail.save(email);
     if (mounted) {
       setState(() => _loading = false);
       _goToApp();
@@ -74,6 +78,7 @@ class _SignupScreenState extends State<SignupScreen> {
       final result = await _authService.signInWithGoogle();
       if (result != null) {
         await _completeSignupBookkeeping(result.user?.uid);
+        if (result.user?.email != null) await _rememberedEmail.save(result.user!.email!);
         _goToApp();
       }
     } catch (e) {

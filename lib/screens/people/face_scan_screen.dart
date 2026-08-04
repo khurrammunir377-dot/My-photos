@@ -119,13 +119,13 @@ class _FaceScanScreenState extends State<FaceScanScreen> {
     }
 
     if (_scanning) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(color: AppColors.primary),
-            SizedBox(height: 16),
-            Text('Scanning your photos for faces...', style: AppTextStyles.subheading),
+            const SizedBox(height: 16),
+            const Text('Scanning your photos for faces...', style: AppTextStyles.subheading),
           ],
         ),
       );

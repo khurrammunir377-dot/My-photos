@@ -328,7 +328,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(priceLabel, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  Text(priceLabel, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   if (_currency != 'USD')
                     const Text('Billed in your local currency via Google Play', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
                 ],
@@ -358,11 +358,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.card_giftcard, color: AppColors.primary),
-                SizedBox(width: 8),
-                Text('Refer friends, get Pro free', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(width: 8),
+                const Text('Refer friends, get Pro free', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
             const SizedBox(height: 8),
