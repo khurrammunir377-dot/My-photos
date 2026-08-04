@@ -221,14 +221,14 @@ class _FaceScanScreenState extends State<FaceScanScreen> {
                           border: Border.all(color: AppColors.primary, width: 3),
                           color: AppColors.primary.withOpacity(0.25),
                         ),
-                        child: const Align(
+                        child: Align(
                           alignment: Alignment.topRight,
                           child: Padding(
-                            padding: EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(4),
                             child: CircleAvatar(
                               radius: 11,
                               backgroundColor: AppColors.primary,
-                              child: Icon(Icons.check, size: 14, color: Colors.white),
+                              child: const Icon(Icons.check, size: 14, color: Colors.white),
                             ),
                           ),
                         ),

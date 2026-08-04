@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/theme_controller.dart';
 
 /// App-wide constants
 class AppConstants {
@@ -25,8 +26,6 @@ class AppConstants {
     "admin@uudsaero.com", // TODO: replace with your real admin email
   ];
 }
-
-import '../services/theme_controller.dart';
 
 class AppColors {
   // Dynamic - reads the currently selected theme (see ThemeController /
