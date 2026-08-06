@@ -10,7 +10,8 @@ import '../subscription/subscription_screen.dart';
 import '../welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback onMenuTap;
+  const ProfileScreen({super.key, required this.onMenuTap});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -71,7 +72,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: widget.onMenuTap,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.menu_rounded, color: AppColors.textDark, size: 20),
+              ),
+            ),
+            const SizedBox(height: 16),
             const Text('Profile', style: AppTextStyles.heading),
             const SizedBox(height: 20),
             Container(

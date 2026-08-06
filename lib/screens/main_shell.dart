@@ -17,12 +17,12 @@ class _MainShellState extends State<MainShell> {
   int _index = 0;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final _screens = const [
-    FolderSelectScreen(),
-    TimelineScreen(),
-    PeopleScreen(),
-    ProfileScreen(),
-  ];
+  List<Widget> get _screens => [
+        FolderSelectScreen(onMenuTap: _openDrawer),
+        TimelineScreen(onMenuTap: _openDrawer),
+        PeopleScreen(onMenuTap: _openDrawer),
+        ProfileScreen(onMenuTap: _openDrawer),
+      ];
 
   final _items = const [
     (Icons.folder_rounded, 'Folders'),
@@ -31,34 +31,14 @@ class _MainShellState extends State<MainShell> {
     (Icons.person_rounded, 'Profile'),
   ];
 
+  void _openDrawer() => _scaffoldKey.currentState?.openDrawer();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       drawer: const AppDrawer(),
-      body: Stack(
-        children: [
-          IndexedStack(index: _index, children: _screens),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 12),
-              child: GestureDetector(
-                onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                child: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 10, offset: const Offset(0, 3))],
-                  ),
-                  child: const Icon(Icons.menu_rounded, color: AppColors.textDark, size: 22),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

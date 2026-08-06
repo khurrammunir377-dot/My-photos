@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 
@@ -6,11 +5,13 @@ import 'package:image/image.dart' as img;
 /// This runs fully on-device, offline, with no ML model download required -
 /// a practical, lightweight stand-in for "AI-based" duplicate/similar detection.
 class DuplicateDetector {
-  /// Computes a 64-bit perceptual hash for an image file.
-  /// Two images with a small Hamming distance between hashes are visually similar.
-  Future<int?> computeHash(File file) async {
+  /// Computes a 64-bit perceptual hash from small thumbnail bytes (NOT the
+  /// full-resolution photo - decoding full 10+ megapixel images one after
+  /// another for hundreds of photos is what was crashing the scan). A dHash
+  /// only ever looks at a 9x8 grayscale version anyway, so hashing a small
+  /// thumbnail gives the same result while using a fraction of the memory.
+  Future<int?> computeHashFromBytes(Uint8List bytes) async {
     try {
-      final bytes = await file.readAsBytes();
       final decoded = img.decodeImage(bytes);
       if (decoded == null) return null;
 

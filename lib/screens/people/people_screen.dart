@@ -7,7 +7,8 @@ import 'face_scan_screen.dart';
 import 'person_detail_screen.dart';
 
 class PeopleScreen extends StatefulWidget {
-  const PeopleScreen({super.key});
+  final VoidCallback onMenuTap;
+  const PeopleScreen({super.key, required this.onMenuTap});
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -87,12 +88,27 @@ class _PeopleScreenState extends State<PeopleScreen> {
 
   Widget _header() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('People', style: AppTextStyles.heading),
-          Text('${_people.length}', style: AppTextStyles.subheading),
+          GestureDetector(
+            onTap: widget.onMenuTap,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.menu_rounded, color: AppColors.textDark, size: 20),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('People', style: AppTextStyles.heading),
+              Text('${_people.length}', style: AppTextStyles.subheading),
+            ],
+          ),
         ],
       ),
     );

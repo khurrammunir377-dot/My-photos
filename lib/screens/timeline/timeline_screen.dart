@@ -4,7 +4,8 @@ import '../../services/photo_service.dart';
 import '../../utils/constants.dart';
 
 class TimelineScreen extends StatefulWidget {
-  const TimelineScreen({super.key});
+  final VoidCallback onMenuTap;
+  const TimelineScreen({super.key, required this.onMenuTap});
 
   @override
   State<TimelineScreen> createState() => _TimelineScreenState();
@@ -23,30 +24,39 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
   Future<void> _load() async {
     final photos = await _photoService.getAllDevicePhotos();
-    final grouped = <String, List<AssetEntity>>{};
+    final grouped = <DateTime, List<AssetEntity>>{};
     for (final asset in photos) {
       final date = asset.createDateTime;
-      final key = _monthLabel(date);
-      grouped.putIfAbsent(key, () => []).add(asset);
+      final dayKey = DateTime(date.year, date.month, date.day);
+      grouped.putIfAbsent(dayKey, () => []).add(asset);
     }
+
+    // Sort day groups newest-first regardless of the order photos came back in.
+    final sortedKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
     if (mounted) {
       setState(() {
         _grouped
           ..clear()
-          ..addAll(grouped);
+          ..addEntries(sortedKeys.map((k) => MapEntry(_dayLabel(k), grouped[k]!)));
         _loading = false;
       });
     }
   }
 
-  String _monthLabel(DateTime date) {
+  String _dayLabel(DateTime date) {
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
     final now = DateTime.now();
-    if (date.year == now.year && date.month == now.month) return 'This month';
-    return '${months[date.month - 1]} ${date.year}';
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    if (date == today) return 'Today';
+    if (date == yesterday) return 'Yesterday';
+    if (date.year == now.year) return '${months[date.month - 1]} ${date.day}';
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   @override
@@ -54,34 +64,56 @@ class _TimelineScreenState extends State<TimelineScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _grouped.isEmpty
-                ? _emptyState()
-                : RefreshIndicator(
-                    onRefresh: _load,
-                    child: CustomScrollView(
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Timeline', style: AppTextStyles.heading),
-                                Text(
-                                  '${_grouped.values.fold<int>(0, (sum, l) => sum + l.length)} photos',
-                                  style: AppTextStyles.subheading,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        for (final entry in _grouped.entries) ..._monthSection(entry.key, entry.value),
-                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                      ],
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: widget.onMenuTap,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(color: AppColors.cardBackground, borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.menu_rounded, color: AppColors.textDark, size: 20),
                     ),
                   ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _grouped.isEmpty
+                      ? _emptyState()
+                      : RefreshIndicator(
+                          onRefresh: _load,
+                          child: CustomScrollView(
+                            slivers: [
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Timeline', style: AppTextStyles.heading),
+                                      Text(
+                                        '${_grouped.values.fold<int>(0, (sum, l) => sum + l.length)} photos',
+                                        style: AppTextStyles.subheading,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              for (final entry in _grouped.entries) ..._monthSection(entry.key, entry.value),
+                              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                            ],
+                          ),
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }

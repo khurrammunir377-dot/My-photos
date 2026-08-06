@@ -43,10 +43,24 @@ class _AutoOrganizeScreenState extends State<AutoOrganizeScreen> {
       final Map<int, int> assetIndexToHash = {};
 
       for (int i = 0; i < scanBatch.length; i++) {
-        final file = await scanBatch[i].file;
-        if (file == null) continue;
-        final hash = await _detector.computeHash(file);
-        if (hash != null) assetIndexToHash[i] = hash;
+        try {
+          // Hash a small thumbnail, not the full-resolution photo - this is
+          // both correct (dHash only needs a tiny grayscale version) and
+          // avoids decoding hundreds of multi-megapixel images, which is
+          // what was causing the scan to crash on real devices.
+          final thumbBytes = await scanBatch[i].thumbnailDataWithSize(const ThumbnailSize(64, 64));
+          if (thumbBytes == null) continue;
+          final hash = await _detector.computeHashFromBytes(thumbBytes);
+          if (hash != null) assetIndexToHash[i] = hash;
+        } catch (_) {
+          continue; // skip any single unreadable/corrupt asset rather than aborting the whole scan
+        }
+
+        // Yield back to the UI thread periodically so the app stays responsive
+        // during a large scan instead of blocking for the whole batch at once.
+        if (i % 25 == 0) {
+          await Future.delayed(Duration.zero);
+        }
       }
 
       final indexGroups = _detector.groupSimilar(assetIndexToHash, threshold: 5);

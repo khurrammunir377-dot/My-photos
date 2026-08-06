@@ -35,10 +35,11 @@ class AppColors {
   static Color get secondary => ThemeController.instance.current.secondary;
   static List<Color> get accentPalette => ThemeController.instance.current.accentPalette;
   static LinearGradient get brandGradient => ThemeController.instance.current.gradient;
+  static LinearGradient get richBrandGradient => ThemeController.instance.current.richGradient;
+  static Color get background => ThemeController.instance.current.background;
 
   // Fixed neutrals - stay the same across all themes for readability/contrast.
   static const Color accent = Color(0xFF2ECC71);
-  static const Color background = Color(0xFFF8F7FC);
   static const Color cardBackground = Colors.white;
   static const Color textDark = Color(0xFF1B1530);
   static const Color textMuted = Color(0xFF8B87A3);

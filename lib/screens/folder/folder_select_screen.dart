@@ -10,7 +10,8 @@ import '../organize/auto_organize_screen.dart';
 import '../subscription/subscription_screen.dart';
 
 class FolderSelectScreen extends StatefulWidget {
-  const FolderSelectScreen({super.key});
+  final VoidCallback onMenuTap;
+  const FolderSelectScreen({super.key, required this.onMenuTap});
 
   @override
   State<FolderSelectScreen> createState() => _FolderSelectScreenState();
@@ -134,7 +135,7 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
       decoration: BoxDecoration(
-        gradient: AppColors.brandGradient,
+        gradient: AppColors.richBrandGradient,
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(28), bottomRight: Radius.circular(28)),
       ),
       child: Column(
@@ -143,7 +144,15 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Your Folders', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800)),
+              GestureDetector(
+                onTap: widget.onMenuTap,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+                ),
+              ),
               if (_isPro)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -152,6 +161,8 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
                 ),
             ],
           ),
+          const SizedBox(height: 16),
+          const Text('Your Folders', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(
             _isPro
