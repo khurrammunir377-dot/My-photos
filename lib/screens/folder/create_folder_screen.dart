@@ -4,7 +4,8 @@ import '../../utils/constants.dart';
 
 class CreateFolderScreen extends StatefulWidget {
   final int? parentId;
-  const CreateFolderScreen({super.key, this.parentId});
+  final bool isVault;
+  const CreateFolderScreen({super.key, this.parentId, this.isVault = false});
 
   @override
   State<CreateFolderScreen> createState() => _CreateFolderScreenState();
@@ -27,13 +28,25 @@ class _CreateFolderScreenState extends State<CreateFolderScreen> {
       _error = null;
     });
     try {
-      await _folderService.createFolder(name, parentId: widget.parentId);
+      await _folderService.createFolder(name, parentId: widget.parentId, isVault: widget.isVault);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  String get _title {
+    if (widget.isVault) return 'New Vault Folder';
+    if (widget.parentId != null) return 'New Subfolder';
+    return 'New Folder';
+  }
+
+  String get _subtitle {
+    if (widget.isVault) return 'Name your vault folder';
+    if (widget.parentId != null) return 'Name your subfolder';
+    return 'Name your folder';
   }
 
   @override
@@ -43,14 +56,14 @@ class _CreateFolderScreenState extends State<CreateFolderScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text(widget.parentId != null ? 'New Subfolder' : 'New Folder', style: const TextStyle(color: AppColors.textDark)),
+        title: Text(_title, style: const TextStyle(color: AppColors.textDark)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.parentId != null ? 'Name your subfolder' : 'Name your folder', style: AppTextStyles.heading),
+            Text(_subtitle, style: AppTextStyles.heading),
             const SizedBox(height: 6),
             const Text(
               'Photos you take will be saved into this album automatically.',

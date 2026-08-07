@@ -5,6 +5,7 @@ class FolderModel {
   final DateTime createdAt;
   final int photoCount;
   final int? parentId; // null = top-level folder, otherwise the id of the parent folder
+  final bool isVault; // true = only visible inside the PIN-locked Vault, hidden from the normal folder list
 
   FolderModel({
     this.id,
@@ -13,6 +14,7 @@ class FolderModel {
     required this.createdAt,
     this.photoCount = 0,
     this.parentId,
+    this.isVault = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class FolderModel {
       'createdAt': createdAt.toIso8601String(),
       'photoCount': photoCount,
       'parentId': parentId,
+      'isVault': isVault ? 1 : 0,
     };
   }
 
@@ -34,6 +37,7 @@ class FolderModel {
       createdAt: DateTime.parse(map['createdAt'] as String),
       photoCount: map['photoCount'] as int? ?? 0,
       parentId: map['parentId'] as int?,
+      isVault: (map['isVault'] as int? ?? 0) == 1,
     );
   }
 
@@ -45,6 +49,7 @@ class FolderModel {
       createdAt: createdAt,
       photoCount: photoCount ?? this.photoCount,
       parentId: parentId,
+      isVault: isVault,
     );
   }
 }

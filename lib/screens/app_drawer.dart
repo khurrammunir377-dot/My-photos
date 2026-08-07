@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/local_session_service.dart';
 import '../utils/constants.dart';
 import 'settings/theme_settings_screen.dart';
+import 'vault/vault_screen.dart';
 import 'welcome_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -20,6 +21,10 @@ class AppDrawer extends StatelessWidget {
             _header(),
             const SizedBox(height: 8),
             _item(context, Icons.home_rounded, 'Home', () => Navigator.pop(context)),
+            _item(context, Icons.lock_outline_rounded, 'Vault', () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultScreen()));
+            }),
             _item(context, Icons.palette_outlined, 'Change Theme', () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()));

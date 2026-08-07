@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:photo_manager/photo_manager.dart';
 import '../../models/folder_model.dart';
 import '../../services/folder_service.dart';
+import '../../services/on_this_day_service.dart';
 import '../../utils/constants.dart';
 import '../camera/camera_screen.dart';
+import '../memories/on_this_day_screen.dart';
 import 'create_folder_screen.dart';
 import 'folder_detail_screen.dart';
 import '../gallery/gallery_screen.dart';
@@ -19,15 +22,29 @@ class FolderSelectScreen extends StatefulWidget {
 
 class _FolderSelectScreenState extends State<FolderSelectScreen> {
   final _folderService = FolderService();
+  final _onThisDayService = OnThisDayService();
   List<FolderModel> _folders = [];
   bool _isPro = false;
   bool _loading = true;
   String _query = '';
+  int _memoryPhotoCount = 0;
+  AssetEntity? _memoryPreviewPhoto;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadMemories();
+  }
+
+  Future<void> _loadMemories() async {
+    final groups = await _onThisDayService.getTodayMemories();
+    if (!mounted) return;
+    final total = groups.fold<int>(0, (sum, g) => sum + g.photos.length);
+    setState(() {
+      _memoryPhotoCount = total;
+      _memoryPreviewPhoto = groups.isNotEmpty ? groups.last.photos.first : null;
+    });
   }
 
   Future<void> _load() async {
@@ -105,6 +122,7 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
                 slivers: [
                   SliverToBoxAdapter(child: _header()),
                   SliverToBoxAdapter(child: _searchBar()),
+                  if (_memoryPhotoCount > 0) SliverToBoxAdapter(child: _onThisDayCard()),
                   SliverToBoxAdapter(child: _autoOrganizeCard()),
                   if (_filteredFolders.isEmpty)
                     SliverFillRemaining(hasScrollBody: false, child: _emptyState())
@@ -191,6 +209,60 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
             prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _onThisDayCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: GestureDetector(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OnThisDayScreen())),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: AppColors.richBrandGradient,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.25), blurRadius: 14, offset: const Offset(0, 5))],
+          ),
+          child: Row(
+            children: [
+              if (_memoryPreviewPhoto != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: FutureBuilder(
+                    future: _memoryPreviewPhoto!.thumbnailDataWithSize(const ThumbnailSize(120, 120)),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done || snapshot.data == null) {
+                        return Container(width: 52, height: 52, color: Colors.white24);
+                      }
+                      return Image.memory(snapshot.data!, width: 52, height: 52, fit: BoxFit.cover);
+                    },
+                  ),
+                )
+              else
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.auto_awesome, color: Colors.white),
+                ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('On This Day', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white)),
+                    const SizedBox(height: 2),
+                    Text('$_memoryPhotoCount photo${_memoryPhotoCount == 1 ? '' : 's'} from years past',
+                        style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.white70),
+            ],
           ),
         ),
       ),

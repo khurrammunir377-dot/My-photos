@@ -22,7 +22,7 @@ class FolderService {
     final path = join(dbPath, 'my_photo_organizer.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE folders (
@@ -31,13 +31,17 @@ class FolderService {
             albumName TEXT NOT NULL UNIQUE,
             createdAt TEXT NOT NULL,
             photoCount INTEGER NOT NULL DEFAULT 0,
-            parentId INTEGER
+            parentId INTEGER,
+            isVault INTEGER NOT NULL DEFAULT 0
           )
         ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await db.execute('ALTER TABLE folders ADD COLUMN parentId INTEGER');
+        }
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE folders ADD COLUMN isVault INTEGER NOT NULL DEFAULT 0');
         }
       },
     );
@@ -75,7 +79,11 @@ class FolderService {
 
   Future<List<FolderModel>> getTopLevelFolders() async {
     final db = await database;
-    final rows = await db.query('folders', where: 'parentId IS NULL', orderBy: 'createdAt DESC');
+    final rows = await db.query(
+      'folders',
+      where: 'parentId IS NULL AND isVault = 0',
+      orderBy: 'createdAt DESC',
+    );
     return rows.map((r) => FolderModel.fromMap(r)).toList();
   }
 
@@ -85,15 +93,28 @@ class FolderService {
     return rows.map((r) => FolderModel.fromMap(r)).toList();
   }
 
+  /// Vault folders - top-level only, only ever shown inside the PIN-locked
+  /// Vault screen, never in the normal Folders list.
+  Future<List<FolderModel>> getVaultFolders() async {
+    final db = await database;
+    final rows = await db.query(
+      'folders',
+      where: 'isVault = 1',
+      orderBy: 'createdAt DESC',
+    );
+    return rows.map((r) => FolderModel.fromMap(r)).toList();
+  }
+
   /// Sanitizes a user-entered folder name into a safe album name for the device gallery.
   String buildAlbumName(String folderName) {
     final sanitized = folderName.trim().replaceAll(RegExp(r'[^a-zA-Z0-9 _-]'), '');
     return '${AppConstants.albumPrefix}_$sanitized';
   }
 
-  Future<FolderModel> createFolder(String name, {int? parentId}) async {
-    if (parentId == null) {
-      // Only top-level folder creation is gated by Free/Pro tier
+  Future<FolderModel> createFolder(String name, {int? parentId, bool isVault = false}) async {
+    if (parentId == null && !isVault) {
+      // Only regular top-level folder creation is gated by Free/Pro tier -
+      // subfolders and Vault folders are always allowed.
       final allowed = await canCreateFolder();
       if (!allowed) {
         throw Exception(
@@ -106,6 +127,7 @@ class FolderService {
       albumName: buildAlbumName(name),
       createdAt: DateTime.now(),
       parentId: parentId,
+      isVault: isVault,
     );
     final id = await db.insert('folders', folder.toMap());
     return FolderModel(
@@ -114,6 +136,7 @@ class FolderService {
       albumName: folder.albumName,
       createdAt: folder.createdAt,
       parentId: parentId,
+      isVault: isVault,
     );
   }
 
