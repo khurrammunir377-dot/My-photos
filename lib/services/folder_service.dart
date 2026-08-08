@@ -140,6 +140,26 @@ class FolderService {
     );
   }
 
+  /// Finds a top-level folder by exact name, or creates it if missing.
+  /// Used by Auto-Detect (Screenshots/Receipts) so repeated runs reuse the
+  /// same folder instead of creating duplicates. Bypasses the Free/Pro gate,
+  /// same as subfolders and Vault folders - this is an automated utility
+  /// feature, not a folder the user manually created.
+  Future<FolderModel> getOrCreateSystemFolder(String name) async {
+    final existing = await getTopLevelFolders();
+    final match = existing.where((f) => f.name.toLowerCase() == name.toLowerCase());
+    if (match.isNotEmpty) return match.first;
+
+    final db = await database;
+    final folder = FolderModel(
+      name: name,
+      albumName: buildAlbumName(name),
+      createdAt: DateTime.now(),
+    );
+    final id = await db.insert('folders', folder.toMap());
+    return FolderModel(id: id, name: folder.name, albumName: folder.albumName, createdAt: folder.createdAt);
+  }
+
   Future<void> incrementPhotoCount(int folderId) async {
     final db = await database;
     await db.rawUpdate(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../../models/folder_model.dart';
 import '../../utils/constants.dart';
+import 'photo_viewer_screen.dart';
 
 class GalleryScreen extends StatefulWidget {
   final FolderModel folder;
@@ -66,17 +67,23 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   ),
                   itemCount: _photos.length,
                   itemBuilder: (context, index) {
-                    return FutureBuilder(
-                      future: _photos[index].thumbnailDataWithSize(const ThumbnailSize(300, 300)),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState != ConnectionState.done || snapshot.data == null) {
-                          return Container(color: Colors.grey.shade200);
-                        }
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.memory(snapshot.data!, fit: BoxFit.cover),
-                        );
-                      },
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => PhotoViewerScreen(photos: _photos, initialIndex: index)),
+                      ),
+                      child: FutureBuilder(
+                        future: _photos[index].thumbnailDataWithSize(const ThumbnailSize(300, 300)),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState != ConnectionState.done || snapshot.data == null) {
+                            return Container(color: Colors.grey.shade200);
+                          }
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.memory(snapshot.data!, fit: BoxFit.cover),
+                          );
+                        },
+                      ),
                     );
                   },
                 ),

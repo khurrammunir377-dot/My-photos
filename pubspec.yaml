@@ -34,6 +34,7 @@ dependencies:
 
   # Face detection (for the People/face-grouping feature)
   google_mlkit_face_detection: ^0.13.1
+  google_mlkit_text_recognition: ^0.15.0   # for detecting receipts (text-dense photos)
 
   # UI
   cupertino_icons: ^1.0.8

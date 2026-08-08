@@ -4,6 +4,8 @@ import '../services/auth_service.dart';
 import '../services/local_session_service.dart';
 import '../utils/constants.dart';
 import 'settings/theme_settings_screen.dart';
+import 'settings/storage_coach_screen.dart';
+import 'before_after/before_after_picker_screen.dart';
 import 'vault/vault_screen.dart';
 import 'welcome_screen.dart';
 
@@ -24,6 +26,14 @@ class AppDrawer extends StatelessWidget {
             _item(context, Icons.lock_outline_rounded, 'Vault', () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultScreen()));
+            }),
+            _item(context, Icons.insights_outlined, 'Storage Coach', () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const StorageCoachScreen()));
+            }),
+            _item(context, Icons.compare_arrows_rounded, 'Before / After', () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const BeforeAfterPickerScreen()));
             }),
             _item(context, Icons.palette_outlined, 'Change Theme', () {
               Navigator.pop(context);

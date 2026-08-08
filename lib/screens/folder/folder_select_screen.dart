@@ -3,12 +3,15 @@ import 'package:photo_manager/photo_manager.dart';
 import '../../models/folder_model.dart';
 import '../../services/folder_service.dart';
 import '../../services/on_this_day_service.dart';
+import '../../services/storage_coach_service.dart';
 import '../../utils/constants.dart';
 import '../camera/camera_screen.dart';
 import '../memories/on_this_day_screen.dart';
+import '../settings/storage_coach_screen.dart';
 import 'create_folder_screen.dart';
 import 'folder_detail_screen.dart';
 import '../gallery/gallery_screen.dart';
+import '../organize/auto_detect_screen.dart';
 import '../organize/auto_organize_screen.dart';
 import '../subscription/subscription_screen.dart';
 
@@ -23,18 +26,26 @@ class FolderSelectScreen extends StatefulWidget {
 class _FolderSelectScreenState extends State<FolderSelectScreen> {
   final _folderService = FolderService();
   final _onThisDayService = OnThisDayService();
+  final _storageCoachService = StorageCoachService();
   List<FolderModel> _folders = [];
   bool _isPro = false;
   bool _loading = true;
   String _query = '';
   int _memoryPhotoCount = 0;
   AssetEntity? _memoryPreviewPhoto;
+  bool _showDigestBanner = false;
 
   @override
   void initState() {
     super.initState();
     _load();
     _loadMemories();
+    _checkDigest();
+  }
+
+  Future<void> _checkDigest() async {
+    final should = await _storageCoachService.shouldShowDigest();
+    if (mounted) setState(() => _showDigestBanner = should);
   }
 
   Future<void> _loadMemories() async {
@@ -111,6 +122,12 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
   }
 
   @override
+  void dispose() {
+    _storageCoachService.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -122,8 +139,10 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
                 slivers: [
                   SliverToBoxAdapter(child: _header()),
                   SliverToBoxAdapter(child: _searchBar()),
+                  if (_showDigestBanner) SliverToBoxAdapter(child: _digestBanner()),
                   if (_memoryPhotoCount > 0) SliverToBoxAdapter(child: _onThisDayCard()),
                   SliverToBoxAdapter(child: _autoOrganizeCard()),
+                  SliverToBoxAdapter(child: _autoDetectCard()),
                   if (_filteredFolders.isEmpty)
                     SliverFillRemaining(hasScrollBody: false, child: _emptyState())
                   else
@@ -262,6 +281,81 @@ class _FolderSelectScreenState extends State<FolderSelectScreen> {
                 ),
               ),
               const Icon(Icons.chevron_right, color: Colors.white70),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _digestBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.insights_outlined, color: AppColors.primary, size: 20),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text('Your weekly storage digest is ready', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
+            TextButton(
+              onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => const StorageCoachScreen()));
+                setState(() => _showDigestBanner = false);
+              },
+              child: const Text('View'),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 18, color: AppColors.textMuted),
+              onPressed: () async {
+                await _storageCoachService.markShown();
+                setState(() => _showDigestBanner = false);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _autoDetectCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: GestureDetector(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AutoDetectScreen())),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.15), borderRadius: BorderRadius.circular(14)),
+                child: Icon(Icons.screenshot_outlined, color: AppColors.secondary),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Auto-Detect', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                    SizedBox(height: 2),
+                    Text('Find screenshots & receipts', style: AppTextStyles.subheading),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ],
           ),
         ),
